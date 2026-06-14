@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin-shell";
 import { VideoPoster } from "@/components/video-poster";
 import { YouTubePlayer } from "@/components/youtube-player";
+import { ConfirmDialog, type ConfirmDialogConfig } from "@/components/confirm-dialog";
 import { api } from "@/lib/api";
 import type { AdminVideo } from "@/lib/types";
 import { formatVideoCategoryLabel } from "@/lib/video-categories";
@@ -73,6 +74,7 @@ export default function VideoModerationPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(true);
+  const [confirmConfig, setConfirmConfig] = useState<ConfirmDialogConfig | null>(null);
 
   useEffect(() => {
     api.getPendingVideos()
@@ -116,6 +118,25 @@ export default function VideoModerationPage() {
     setQueue((current) =>
       current.map((video) => (video.videoId === selectedVideo.videoId ? { ...video, notes } : video)),
     );
+  };
+
+  const confirmApprove = (video: QueueVideo) => {
+    setConfirmConfig({
+      title: "Approve video?",
+      message: `Are you sure you want to approve "${video.title}"? It will be published and visible to all users.`,
+      confirmLabel: "Approve",
+      onConfirm: () => updateVideo(video.videoId, { status: "Approved" }, `${video.title} approved.`),
+    });
+  };
+
+  const confirmReject = (video: QueueVideo) => {
+    setConfirmConfig({
+      title: "Reject video?",
+      message: `Are you sure you want to reject "${video.title}"? The creator will be notified of this decision.`,
+      confirmLabel: "Reject",
+      variant: "danger",
+      onConfirm: () => updateVideo(video.videoId, { status: "Rejected" }, `${video.title} rejected.`),
+    });
   };
 
   return (
@@ -178,13 +199,13 @@ export default function VideoModerationPage() {
                   <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{video.description}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
-                      onClick={() => updateVideo(video.videoId, { status: "Approved" }, `${video.title} approved.`)}
+                      onClick={() => confirmApprove(video)}
                       className="pressable rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-700"
                     >
                       Approve
                     </button>
                     <button
-                      onClick={() => updateVideo(video.videoId, { status: "Rejected" }, `${video.title} rejected.`)}
+                      onClick={() => confirmReject(video)}
                       className="pressable rounded-lg bg-rose-600 px-3 py-2 text-sm font-bold text-white hover:bg-rose-700"
                     >
                       Reject
@@ -251,13 +272,13 @@ export default function VideoModerationPage() {
             />
             <div className="mt-4 grid gap-2">
               <button
-                onClick={() => updateVideo(selectedVideo.videoId, { status: "Approved" }, `${selectedVideo.title} approved and published.`)}
+                onClick={() => confirmApprove(selectedVideo)}
                 className="pressable rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700"
               >
                 Approve and publish
               </button>
               <button
-                onClick={() => updateVideo(selectedVideo.videoId, { status: "Rejected" }, `${selectedVideo.title} rejected and creator notified.`)}
+                onClick={() => confirmReject(selectedVideo)}
                 className="pressable rounded-lg bg-rose-600 px-4 py-3 text-sm font-bold text-white hover:bg-rose-700"
               >
                 Reject and notify
@@ -266,6 +287,7 @@ export default function VideoModerationPage() {
           </aside>
         ) : null}
       </div>
+      <ConfirmDialog config={confirmConfig} onClose={() => setConfirmConfig(null)} />
     </AdminShell>
   );
 }

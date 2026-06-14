@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
       </section>
       {notice ? <div className="mt-4 rounded-lg bg-orange-50 px-3 py-2 text-sm font-bold text-orange-800">{notice}</div> : null}
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_380px]">
+      <section className="mt-6">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -73,21 +73,6 @@ export default function AdminDashboardPage() {
             </p>
           </div>
         </div>
-
-        <aside className="rounded-lg border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-          <h2 className="text-xl font-black">System readiness</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-300">
-            Frontend is live. Full API connectivity requires the project `.env` credentials for Supabase and Kafka.
-          </p>
-          <div className="mt-5 space-y-3">
-            {["API gateway", "User service", "Video service", "Recommendation service"].map((service) => (
-              <div key={service} className="flex items-center justify-between rounded-lg bg-white/10 px-3 py-2">
-                <span className="text-sm font-semibold">{service}</span>
-                <span className="rounded bg-orange-400/20 px-2 py-1 text-xs font-bold text-orange-100">Waiting env</span>
-              </div>
-            ))}
-          </div>
-        </aside>
       </section>
     </AdminShell>
   );

@@ -51,13 +51,7 @@ export function AdminShell({ children, title }: { children: React.ReactNode; tit
                 Sign out
               </button>
             </nav>
-
-            <div className="mt-8 rounded-lg border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-white/40">Mode</p>
-              <p className="mt-2 text-sm font-bold text-white">Administration only</p>
-              <p className="mt-1 text-xs leading-5 text-white/50">No user feed links are available here.</p>
-            </div>
-          </aside>
+            </aside>
 
           <section className="min-w-0 bg-slate-100 text-slate-950">
             <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-8">

@@ -62,7 +62,7 @@ export default function UploadPage() {
 
   return (
     <AppShell title="Upload studio" eyebrow="Creator tools">
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="mx-auto max-w-3xl">
         <form onSubmit={submitUpload} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-xl font-black text-slate-950">Video details</h2>
           <p className="mt-1 text-sm text-slate-500">Upload metadata and file through the API gateway.</p>
@@ -118,24 +118,6 @@ export default function UploadPage() {
             {loading ? "Uploading..." : "Submit for processing"}
           </button>
         </form>
-
-        <aside className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:h-fit">
-          <h2 className="text-lg font-black text-slate-950">Publishing checklist</h2>
-          <div className="mt-4 space-y-3">
-            {[
-              "Readable title",
-              "Clear topic category",
-              "Useful description",
-              "Language selected",
-              "Safe for moderation",
-            ].map((item) => (
-              <div key={item} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                <span className="font-semibold text-slate-700">{item}</span>
-                <span className="rounded bg-white px-2 py-1 text-xs font-bold text-slate-500">Ready</span>
-              </div>
-            ))}
-          </div>
-        </aside>
       </div>
     </AppShell>
   );
