@@ -20,6 +20,25 @@ export type UserPreference = {
   weight: number;
 };
 
+// One discoverable creator on the "Browse creators" page. `categories` are the
+// user's declared preferred categories; `isOnline` is derived from a recent
+// heartbeat. Upload count is fetched separately from video-service per card.
+export type UserSummary = {
+  userId: string;
+  username: string;
+  displayName?: string;
+  profilePictureUrl?: string;
+  isOnline: boolean;
+  categories: string[];
+};
+
+export type BrowseUsersResponse = {
+  users: UserSummary[];
+  page: number;
+  size: number;
+  totalElements: number;
+};
+
 export type UserProfile = {
   userId: string;
   username: string;

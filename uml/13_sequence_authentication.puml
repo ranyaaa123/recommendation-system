@@ -26,11 +26,7 @@ DB --> S : Résultat de la vérification
 deactivate DB
 
 alt Identifiants corrects
-  S -> S : Générer le jeton de session
-  S -> DB : Enregistrer la session
-  activate DB
-  DB --> S : OK
-  deactivate DB
+  S -> S : Enregistrer la session
   S --> U : Redirection vers la page d'accueil
 else Identifiants incorrects
   S --> U : Message d'erreur : introuvable

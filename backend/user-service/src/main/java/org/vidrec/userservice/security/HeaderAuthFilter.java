@@ -36,6 +36,12 @@ public class HeaderAuthFilter extends OncePerRequestFilter {
     // be recognized as public here too.
     private static final java.util.regex.Pattern PUBLIC_PROFILE_PATH =
         java.util.regex.Pattern.compile("^/users/[^/]+/public-profile/?$");
+    // GET /users/{id}/following is read service-to-service by recommendation-service
+    // (no gateway, so no X-Internal-Token). SecurityConfig permits it, but this
+    // filter runs first and would otherwise 401 the call, silently dropping the
+    // social recommendation signal.
+    private static final java.util.regex.Pattern FOLLOWING_PATH =
+        java.util.regex.Pattern.compile("^/users/[^/]+/following/?$");
 
     private final String internalServiceToken;
 
@@ -61,7 +67,8 @@ public class HeaderAuthFilter extends OncePerRequestFilter {
     private boolean isPublicPath(String path) {
         if (path == null) return false;
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith)
-            || PUBLIC_PROFILE_PATH.matcher(path).matches();
+            || PUBLIC_PROFILE_PATH.matcher(path).matches()
+            || FOLLOWING_PATH.matcher(path).matches();
     }
 
     @Override

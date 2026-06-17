@@ -3,10 +3,12 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmDialog, type ConfirmDialogConfig } from "@/components/confirm-dialog";
 import { YouTubePlayer } from "@/components/youtube-player";
 import { VideoCard } from "@/components/video-card";
 import { VideoPoster } from "@/components/video-poster";
 import { api, getAuthToken } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { saveHistory } from "@/lib/history";
 import { useUploaderName } from "@/lib/use-uploader";
 import { fromApiVideo, type UiVideo } from "@/lib/video-mapper";
@@ -127,6 +129,58 @@ function WatchExperience({ currentVideo }: { currentVideo: UiVideo }) {
   const uploaderName = useUploaderName(currentVideo.uploaderId);
   const channelLabel = uploaderName || currentVideo.channel;
   const channelInitial = (uploaderName || currentVideo.channel || "?").trim().charAt(0).toUpperCase() || "?";
+
+  const { user } = useAuth();
+  const uploaderId = currentVideo.uploaderId;
+  // Dataset videos (e.g. YouTube imports) have no real uploader account, and you
+  // can't follow yourself — only show Follow for other real creators.
+  const canFollow = Boolean(uploaderId && user?.userId && uploaderId !== user.userId);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followPending, setFollowPending] = useState(false);
+  const [followConfirm, setFollowConfirm] = useState<ConfirmDialogConfig | null>(null);
+
+  useEffect(() => {
+    if (!canFollow || !user?.userId || !uploaderId) {
+      setIsFollowing(false);
+      return;
+    }
+    let active = true;
+    api.getFollowing(user.userId)
+      .then((ids) => {
+        if (active) {
+          setIsFollowing(ids.includes(uploaderId));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [canFollow, user?.userId, uploaderId]);
+
+  const applyFollowToggle = () => {
+    if (!uploaderId) {
+      return;
+    }
+    setFollowPending(true);
+    const action = isFollowing ? api.unfollowUser(uploaderId) : api.followUser(uploaderId);
+    action
+      .then(() => setIsFollowing((value) => !value))
+      .catch(() => undefined)
+      .finally(() => setFollowPending(false));
+  };
+
+  const requestFollowToggle = () => {
+    setFollowConfirm({
+      title: isFollowing ? "Unfollow creator" : "Follow creator",
+      message: isFollowing
+        ? `Stop following ${channelLabel}? Their activity will no longer influence your recommendations.`
+        : `Follow ${channelLabel}? What they watch will start shaping your recommendations.`,
+      confirmLabel: isFollowing ? "Unfollow" : "Follow",
+      variant: isFollowing ? "danger" : "default",
+      onConfirm: applyFollowToggle,
+    });
+  };
+
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -629,6 +683,20 @@ function WatchExperience({ currentVideo }: { currentVideo: UiVideo }) {
                 {channelInitial}
               </div>
               <p className="font-bold text-slate-950">{channelLabel}</p>
+              {canFollow ? (
+                <button
+                  type="button"
+                  disabled={followPending}
+                  onClick={requestFollowToggle}
+                  className={`pressable ml-auto rounded-full px-5 py-2 text-sm font-bold transition disabled:opacity-60 ${
+                    isFollowing
+                      ? "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      : "bg-teal-600 text-white hover:bg-teal-700"
+                  }`}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </button>
+              ) : null}
             </div>
 
             <div className="mt-5 rounded-xl bg-white p-4">
@@ -648,7 +716,7 @@ function WatchExperience({ currentVideo }: { currentVideo: UiVideo }) {
               <input className="field h-10 px-3 text-sm" placeholder="Add a thoughtful comment" />
             </div>
             <div className="mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm font-semibold text-slate-500">
-              Comments are not connected to a backend service yet. The player will keep recording watch history and recommendation signals.
+              No comments yet.
             </div>
           </section>
         </section>
@@ -685,6 +753,7 @@ function WatchExperience({ currentVideo }: { currentVideo: UiVideo }) {
           </div>
         </aside>
       </div>
+      <ConfirmDialog config={followConfirm} onClose={() => setFollowConfirm(null)} />
     </AppShell>
   );
 }

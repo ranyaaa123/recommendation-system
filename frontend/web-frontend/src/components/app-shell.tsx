@@ -4,14 +4,18 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
+import { api } from "@/lib/api";
 import { isAdminUser, useAuth } from "@/lib/auth";
 
 const navItems = [
   { href: "/homepage", label: "Home" },
+  { href: "/creators", label: "Creators" },
   { href: "/history", label: "History" },
   { href: "/upload", label: "Upload" },
   { href: "/profile", label: "Profile" },
 ];
+
+const HEARTBEAT_INTERVAL_MS = 60_000;
 
 export function AppShell({
   children,
@@ -36,6 +40,20 @@ export function AppShell({
       router.replace("/admin/dashboard");
     }
   }, [router, user]);
+
+  // Presence: ping while a (non-admin) user has the app open so other users can
+  // see them as online on the Browse creators page.
+  useEffect(() => {
+    if (!user?.userId || isAdminUser(user)) {
+      return;
+    }
+    const ping = () => {
+      api.sendHeartbeat().catch(() => undefined);
+    };
+    ping();
+    const timer = window.setInterval(ping, HEARTBEAT_INTERVAL_MS);
+    return () => window.clearInterval(timer);
+  }, [user?.userId, user]);
 
   if (isAdminUser(user)) {
     return (

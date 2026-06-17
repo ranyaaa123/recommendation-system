@@ -65,7 +65,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 35s
+      # Matches the other JVM services; user-service cold-starts in ~3.5 min
+      # against the remote Supabase DB, well past the old 35s window.
+      start_period: 240s
 
   # Video Service
   video-service:
@@ -111,7 +113,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 35s
+      start_period: 240s
 
   # Recommendation Service
   recommendation-service:
@@ -152,7 +154,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 35s
+      start_period: 240s
 
   # SVD Python Sidecar (FastAPI)
   svd-sidecar:

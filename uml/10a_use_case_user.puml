@@ -26,7 +26,6 @@ rectangle "Plateforme Vidéo" {
   usecase "Rechercher une vidéo"          as UC_Search
   usecase "Regarder une vidéo"            as UC_Watch
   usecase "Aimer / Ne pas aimer"          as UC_Like
-  usecase "Obtenir des\nrecommandations"  as UC_Reco
   usecase "Publier une vidéo"             as UC_Upload
   usecase "Gérer son profil"              as UC_Profile
   usecase "Mettre à jour ses\npréférences" as UC_UpdatePrefs
@@ -41,7 +40,6 @@ user -- UC_Catalog
 user -- UC_Search
 user -- UC_Watch
 user -- UC_Like
-user -- UC_Reco
 user -- UC_Upload
 user -- UC_Profile
 
@@ -53,7 +51,6 @@ UC_Catalog ..> UC_Login : <<include>>
 UC_Search  ..> UC_Login : <<include>>
 UC_Watch   ..> UC_Login : <<include>>
 UC_Like    ..> UC_Login : <<include>>
-UC_Reco    ..> UC_Login : <<include>>
 UC_Upload  ..> UC_Login : <<include>>
 UC_Profile ..> UC_Login : <<include>>
 
@@ -64,10 +61,5 @@ UC_UpdatePrefs ..> UC_Profile : <<extend>>
 note right of UC_Watch
   Disponibilité 99.9%
   Latence démarrage < 2s
-end note
-note bottom of UC_Reco
-  Personnalisation basée sur
-  l'historique + préférences déclarées
-  Cache 10 min
 end note
 @enduml

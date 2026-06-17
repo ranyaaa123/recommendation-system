@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserPreferenceRepository extends JpaRepository<UserPreference, UUID> {
     List<UserPreference> findByUserId(UUID userId);
+    List<UserPreference> findByUserIdIn(List<UUID> userIds);
     void deleteByUserId(UUID userId);
 }

@@ -84,7 +84,7 @@ export default function LoginPage() {
             <div className="p-6 sm:p-8">
             <div className="mb-6">
               <h2 className="text-3xl font-black text-slate-950">Sign in</h2>
-              <p className="mt-2 text-sm text-slate-500">Sign in with your backend account.</p>
+              <p className="mt-2 text-sm text-slate-500">Sign in to your account.</p>
             </div>
 
             {error ? (
