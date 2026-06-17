@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.vidrec.userservice.preference.UpdatePreferencesRequest;
 import org.vidrec.userservice.shared.exception.ApiException;
@@ -38,6 +39,34 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
+    }
+
+    // Discoverable creators for the "Browse creators" page. The current user is
+    // excluded from the results. Lives under /users/ so the gateway injects the
+    // X-User-Id header used to filter out the caller.
+    @GetMapping("/browse")
+    public ResponseEntity<BrowseUsersResponse> browseUsers(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "24") int size,
+        @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+        Authentication authentication
+    ) {
+        UUID currentUserId = optionalUserId(headerUserId, authentication);
+        return ResponseEntity.ok(userService.browseUsers(currentUserId, page, size));
+    }
+
+    // Lightweight presence ping; the frontend calls this periodically so other
+    // users can see who is online.
+    @PostMapping("/me/heartbeat")
+    public ResponseEntity<Void> heartbeat(
+        @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+        Authentication authentication
+    ) {
+        UUID currentUserId = optionalUserId(headerUserId, authentication);
+        if (currentUserId != null) {
+            userService.touchLastSeen(currentUserId);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{userId}/profile")
@@ -92,6 +121,18 @@ public class UserController {
         }
         if (!pathUserId.toString().equals(authenticatedUserId)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "JWT userId does not match path userId.", List.of());
+        }
+    }
+
+    private UUID optionalUserId(String headerUserId, Authentication authentication) {
+        String resolved = resolveAuthenticatedUserId(headerUserId, authentication);
+        if (resolved == null || resolved.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(resolved);
+        } catch (IllegalArgumentException ex) {
+            return null;
         }
     }
 

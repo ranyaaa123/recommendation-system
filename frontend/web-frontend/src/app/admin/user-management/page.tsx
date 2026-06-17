@@ -117,7 +117,7 @@ export default function UserManagementPage() {
           ? api.updateAdminUser(selectedUser.userId, { role: changes.role })
           : Promise.resolve();
 
-    request.catch(() => setNotice("Backend update failed. Change applied only in the UI."));
+    request.catch(() => setNotice("Update failed. Change applied only in the UI."));
     setUsers((current) =>
       current.map((user) => (user.username === selectedUser.username ? { ...user, ...changes } : user)),
     );
@@ -125,7 +125,7 @@ export default function UserManagementPage() {
   };
 
   const deleteSelectedUser = () => {
-    api.deleteUser(selectedUser.userId).catch(() => setNotice("Backend delete failed. User removed only in the UI."));
+    api.deleteUser(selectedUser.userId).catch(() => setNotice("Delete failed. User removed only in the UI."));
     setUsers((current) => current.filter((user) => user.username !== selectedUser.username));
     setSelectedUsername(users.find((user) => user.username !== selectedUser.username)?.username || "");
     setNotice(`${selectedUser.username} deleted locally.`);

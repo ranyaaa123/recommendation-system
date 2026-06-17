@@ -62,6 +62,9 @@ public class User {
     @Column(name = "ban_reason", length = 255)
     private String banReason;
 
+    @Column(name = "last_seen_at")
+    private LocalDateTime lastSeenAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

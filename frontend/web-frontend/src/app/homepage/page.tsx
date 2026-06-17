@@ -250,7 +250,7 @@ function HomepageContent() {
       return {
         mode: "grid",
         videos: [],
-        notice: "Backend unavailable or no videos found.",
+        notice: "No videos found.",
       };
     };
 
@@ -273,7 +273,7 @@ function HomepageContent() {
         if (activeRequest) {
           setRemoteVideos([]);
           setFeedSections([]);
-          setNotice("Backend unavailable or no videos found.");
+          setNotice("Couldn't load videos. Please try again.");
         }
       })
       .finally(() => {
@@ -372,7 +372,7 @@ function HomepageContent() {
         <div className="mb-5 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black text-slate-950">{query ? `Search: ${query}` : active === forYouCategoryLabel ? "Recommended" : active}</h1>
-            <p className="mt-1 text-sm text-slate-500">{loading ? "Loading from backend..." : notice || "Recommendations from your interests and activity."}</p>
+            <p className="mt-1 text-sm text-slate-500">{loading ? "Finding videos for you..." : notice || "Recommendations from your interests and activity."}</p>
           </div>
         </div>
 

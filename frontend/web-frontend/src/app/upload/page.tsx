@@ -27,7 +27,7 @@ export default function UploadPage() {
     }
 
     if (!getAuthToken()) {
-      setStatus("Sign in again before uploading. The backend needs a valid session for both upload steps.");
+      setStatus("Sign in again before uploading. Your session is expired");
       return;
     }
 
@@ -47,7 +47,7 @@ export default function UploadPage() {
       });
 
       await api.uploadVideoFile(init.videoId, init.uploadToken, file);
-      setStatus("Upload sent to the backend. The video is waiting for admin review.");
+      setStatus("Your video is processing and will be visible after moderation.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed.";
       setStatus(

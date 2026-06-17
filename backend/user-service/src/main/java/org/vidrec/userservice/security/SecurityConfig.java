@@ -33,6 +33,8 @@ public class SecurityConfig {
                 auth
                     .requestMatchers("/users/register/**", "/users/login/**", "/actuator/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/users/*/public-profile").permitAll()
+                    // Follow graph read is used service-to-service by recommendation-service.
+                    .requestMatchers(HttpMethod.GET, "/users/*/following").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated();
             })

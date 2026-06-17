@@ -68,10 +68,7 @@ activate DB
 DB --> S : Données utilisateur
 deactivate DB
 S -> S : Calculer les recommandations
-S -> DB : Mettre en cache le résultat
-activate DB
-DB --> S : OK
-deactivate DB
+S -> S : Mettre en cache le résultat
 S --> U : Liste de vidéos recommandées
 deactivate S
 @enduml

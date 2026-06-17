@@ -7,6 +7,7 @@ import type {
   AdminVideoListResponse,
   ApiVideo,
   AuthResponse,
+  BrowseUsersResponse,
   ColdStartRecommendationsResponse,
   LikeActionResponse,
   PublicProfile,
@@ -273,6 +274,39 @@ export const api = {
 
   getUserVideos(userId: string) {
     return apiRequest<VideoListResponse>(`/videos/user/${encodeURIComponent(userId)}?page=0&size=12`, { auth: false });
+  },
+
+  // -- Followers / creators --
+  getUsers(params: { page?: number; size?: number } = {}) {
+    const search = new URLSearchParams();
+    search.set("page", String(params.page ?? 0));
+    search.set("size", String(params.size ?? 24));
+    return apiRequest<BrowseUsersResponse>(`/users/browse?${search.toString()}`);
+  },
+
+  getFollowing(userId: string) {
+    return apiRequest<string[]>(`/users/${encodeURIComponent(userId)}/following`);
+  },
+
+  followUser(userId: string) {
+    return apiRequest<void>(`/users/${encodeURIComponent(userId)}/follow`, { method: "POST" })
+      .then((response) => {
+        // Following someone changes the recommendation blend, so drop the cached feed.
+        invalidateRecommendationCaches();
+        return response;
+      });
+  },
+
+  unfollowUser(userId: string) {
+    return apiRequest<void>(`/users/${encodeURIComponent(userId)}/follow`, { method: "DELETE" })
+      .then((response) => {
+        invalidateRecommendationCaches();
+        return response;
+      });
+  },
+
+  sendHeartbeat() {
+    return apiRequest<void>("/users/me/heartbeat", { method: "POST" });
   },
 
   recordWatch(payload: {

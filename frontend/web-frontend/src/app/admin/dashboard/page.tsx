@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
           { label: "Views", value: String(videos.totalViews), detail: `${videos.uploadsLast7Days} uploads this week` },
         ]);
       })
-      .catch(() => setNotice("Admin API unavailable. Check backend services and credentials."));
+      .catch(() => setNotice("Admin data unavailable. Check the services and credentials."));
   }, []);
 
   const exportReport = () => {

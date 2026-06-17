@@ -103,7 +103,7 @@ export default function VideoModerationPage() {
           : changes.status === "Rejected"
             ? api.rejectVideo(current.videoId, current.notes)
             : Promise.resolve();
-      request.catch(() => setNotice("Backend moderation failed. Change applied only in the UI."));
+      request.catch(() => setNotice("Moderation update failed. Change applied only in the UI."));
     }
 
     setQueue((current) => current.map((video) => (video.videoId === videoId ? { ...video, ...changes } : video)));

@@ -9,34 +9,49 @@ skinparam PackageBorderColor #888888
 title Diagramme de classes -- Plateforme Vidéo
 
 ' ============================================================
-' ENUMERATIONS (PPT rule CD9)
+' ENUMERATIONS
 ' ============================================================
-enum "«Enumeration»\nRôle" as ERole {
-  UTILISATEUR
-  ADMINISTRATEUR
+together {
+  enum "«Enumeration»\nRôle" as ERole {
+    UTILISATEUR
+    ADMINISTRATEUR
+  }
+
+  enum "«Enumeration»\nStatutVidéo" as EStatus {
+    EN_ATTENTE
+    PUBLIÉE
+    REJETÉE
+  }
+
+  enum "«Enumeration»\nOrigineVidéo" as ESource {
+    PLATEFORME
+    YOUTUBE
+  }
+
+  enum "«Enumeration»\nTypeAppréciation" as EAction {
+    AIMÉE
+    NON_AIMÉE
+  }
 }
 
-enum "«Enumeration»\nStatutVidéo" as EStatus {
-  EN_ATTENTE
-  EN_REVUE
-  PUBLIÉE
-  REJETÉE
-}
-
-enum "«Enumeration»\nOrigineVidéo" as ESource {
-  PLATEFORME
-  YOUTUBE
-}
-
-enum "«Enumeration»\nTypeAppréciation" as EAction {
-  AIMÉE
-  NON_AIMÉE
-}
+' On force l'alignement horizontal strict d'un bout à l'autre
+ERole -[hidden]right- EStatus
+EStatus -[hidden]right- ESource
+ESource -[hidden]right- EAction
 
 ' ============================================================
 ' SOUS-SYSTÈME : GestionUtilisateurs
 ' ============================================================
 package "«SousSystème» GestionUtilisateurs" as PkgUser {
+
+  class Administrateur {
+    --
+    + Modérer_vidéo( in vidéo : Vidéo [1], in décision : StatutVidéo [1] )
+    + Approuver( in vidéo : Vidéo [1] )
+    + Rejeter( in vidéo : Vidéo [1], in motif : String [1] )
+    + Bannir_utilisateur( in utilisateur : Utilisateur [1], in motif : String [1] )
+    + Gérer_utilisateurs()
+  }
 
   class Utilisateur {
     - identifiant : UUID [1]
@@ -53,13 +68,7 @@ package "«SousSystème» GestionUtilisateurs" as PkgUser {
     + Se_connecter( in email : String [1], in motDePasse : String [1] ) : Jeton
     + Modifier_profil( in biographie : String [0..1], in urlPhoto : String [0..1] )
     + Publier_vidéo( in titre : String [1], in fichier : Fichier [1], in catégorie : Catégorie [1] ) : Vidéo
-  }
-
-  class Administrateur {
-    --
-    + Modérer_vidéo( in vidéo : Vidéo [1], in décision : StatutVidéo [1] )
-    + Bannir_utilisateur( in utilisateur : Utilisateur [1], in motif : String [1] )
-    + Gérer_utilisateurs()
+    + Rechercher( in requête : String [1] ) : Vidéo [*]
   }
 
   class PréférenceUtilisateur {
@@ -71,7 +80,6 @@ package "«SousSystème» GestionUtilisateurs" as PkgUser {
 
   Administrateur --|> Utilisateur
   Utilisateur "1" *-- "1..*" PréférenceUtilisateur : possède
-  Utilisateur ..> ERole
 }
 
 ' ============================================================
@@ -92,9 +100,6 @@ package "«SousSystème» GestionVidéos" as PkgVideo {
     --
     + Lire() : Flux
     + Incrémenter_vues()
-    + Approuver( in administrateur : Administrateur [1] )
-    + Rejeter( in administrateur : Administrateur [1], in motif : String [1] )
-    + Rechercher( in requête : String [1] ) : Vidéo [*]
   }
 
   class Catégorie {
@@ -123,17 +128,20 @@ package "«SousSystème» GestionVidéos" as PkgVideo {
   Vidéo "*" o-- "1" Catégorie         : classée dans
   Vidéo "1" *-- "*" SessionVisionnage : tracée par
   Vidéo "1" *-- "*" Appréciation      : appréciée par
-
-  Vidéo ..> EStatus
-  Vidéo ..> ESource
-  Appréciation ..> EAction
 }
 
 ' ============================================================
-' Relations inter-sous-systèmes
+' Relations inter-sous-systèmes & Layout Hints
 ' ============================================================
-Utilisateur "1" -- "*" Vidéo             : publie
-Utilisateur "1" -- "*" SessionVisionnage : réalise
-Utilisateur "1" -- "*" Appréciation      : émet
+' 1. On force le bloc vidéo à droite de l'utilisateur
+Utilisateur "1" -right- "*" Vidéo             : publie
+Utilisateur "1" -right- "*" SessionVisionnage : réalise
+Utilisateur "1" -right- "*" Appréciation      : émet
+
+' 2. LA MAGIE DU PLACEMENT ICI :
+' On dit à PlantUML de placer le bloc d'énumérations AU-DESSUS de la classe Vidéo
+ERole -[hidden]down- Vidéo
+' Optionnel : on dit à l'Administrateur de repousser les énumérations vers la droite
+Administrateur -[hidden]right- ERole
 
 @enduml

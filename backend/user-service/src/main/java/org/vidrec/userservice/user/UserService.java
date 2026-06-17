@@ -3,9 +3,14 @@ package org.vidrec.userservice.user;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,8 @@ import org.vidrec.userservice.shared.exception.ErrorDetail;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private static final long ONLINE_WINDOW_MINUTES = 5;
 
     private final UserRepository userRepository;
     private final UserPreferenceRepository preferenceRepository;
@@ -89,7 +96,49 @@ public class UserService {
             throw unauthorized("INVALID_CREDENTIALS", "Email or password is incorrect.");
         }
 
+        user.setLastSeenAt(LocalDateTime.now());
+        userRepository.save(user);
         return toAuthResponse(user);
+    }
+
+    @Transactional
+    public void touchLastSeen(UUID userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setLastSeenAt(LocalDateTime.now());
+            userRepository.save(user);
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public BrowseUsersResponse browseUsers(UUID currentUserId, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size <= 0 ? 24 : size,
+            Sort.by(new Sort.Order(Sort.Direction.DESC, "lastSeenAt", Sort.NullHandling.NULLS_LAST)));
+        // Only real creators — admins don't upload or watch, so they aren't followable.
+        Page<User> users = userRepository.findByRoleAndIsActive(UserRole.USER, true, pageable);
+
+        List<User> visible = users.getContent().stream()
+            .filter(user -> !user.getId().equals(currentUserId))
+            .toList();
+
+        Map<UUID, List<String>> categoriesByUser = preferenceRepository
+            .findByUserIdIn(visible.stream().map(User::getId).toList())
+            .stream()
+            .collect(Collectors.groupingBy(
+                UserPreference::getUserId,
+                Collectors.mapping(UserPreference::getCategory, Collectors.toList())));
+
+        LocalDateTime onlineSince = LocalDateTime.now().minusMinutes(ONLINE_WINDOW_MINUTES);
+        List<BrowseUsersResponse.UserSummary> summaries = visible.stream()
+            .map(user -> new BrowseUsersResponse.UserSummary(
+                user.getId(),
+                user.getUsername(),
+                user.getDisplayName(),
+                user.getProfilePictureUrl(),
+                user.getLastSeenAt() != null && user.getLastSeenAt().isAfter(onlineSince),
+                categoriesByUser.getOrDefault(user.getId(), List.of())))
+            .toList();
+
+        return new BrowseUsersResponse(summaries, users.getNumber(), users.getSize(), users.getTotalElements());
     }
 
     public UserProfileResponse getProfile(UUID userId) {
